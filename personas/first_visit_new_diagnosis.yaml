@@ -1,0 +1,17 @@
+scenario_id: first_visit_new_diagnosis
+title: First Visit After New Diabetes Diagnosis
+learning_objectives:
+  - establish therapeutic alliance in first minutes
+  - elicit patient concerns and barriers without rushing
+  - respond appropriately to anxiety about diagnosis and medications
+persona_ref: anxious_newly_diagnosed_diabetic
+opening_situation: >-
+  This is Maria Gonzalez's first visit after her Type 2 diabetes diagnosis.
+  The learner is meeting her as her new primary care provider.
+  She is sitting in the exam room, looking at her hands.
+success_criteria:
+  - "Provider uses open-ended questions in the opening exchange"
+  - "Provider acknowledges patient's emotions about the diagnosis"
+  - "Provider asks about barriers or concerns before jumping to management"
+max_turns: 12
+rubric_ref: rubric_communication_basics

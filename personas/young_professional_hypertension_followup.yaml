@@ -1,0 +1,17 @@
+scenario_id: young_professional_hypertension_followup
+title: Young Professional Hypertension Follow-Up
+learning_objectives:
+  - deliver clear, evidence-based explanation of hypertension management
+  - address lifestyle-vs-medication concerns without being dismissive
+  - set measurable goals and a concrete follow-up plan
+persona_ref: cooperative_young_professional_hypertensive
+opening_situation: >-
+  This is a follow-up visit with James Carter, a 32-year-old software engineer
+  newly started on lisinopril. He comes across calm but slightly impatient and wants
+  clear next steps.
+success_criteria:
+  - "Provider acknowledges patient's concerns about medication and lifestyle"
+  - "Provider offers numeric BP targets or a timeline"
+  - "Provider avoids unnecessary small talk and keeps explanations concise"
+max_turns: 10
+rubric_ref: rubric_communication_basics
