@@ -11,11 +11,19 @@ class _ProviderConfig(BaseModel):
     temperature: float = Field(default=0.7, ge=0.0, le=2.0)
     max_tokens: int = Field(default=512, gt=0)
     seed: int | None = Field(default=42)
+    endpoint: str = Field(default="")
+    deployment: str = Field(default="")
+    credential_type: str = Field(default="api_key")
+    api_key: str = Field(default="")
 
 
 class _EmbeddingConfig(BaseModel):
     provider: str = Field(default="openai")
     model: str = Field(default="text-embedding-3-small")
+    endpoint: str = Field(default="")
+    deployment: str = Field(default="")
+    credential_type: str = Field(default="api_key")
+    api_key: str = Field(default="")
 
 
 class Settings(BaseSettings):
@@ -44,31 +52,49 @@ class Settings(BaseSettings):
     chroma_persist_dir: str = Field(default=".chroma", alias="CHROMA_PERSIST_DIR")
 
     @property
+    def _foundry_common(self) -> dict[str, Any]:
+        return {
+            "endpoint": self.azure_foundry_endpoint,
+            "deployment": self.azure_foundry_deployment,
+            "credential_type": "api_key",
+            "api_key": self.azure_foundry_api_key,
+        }
+
+    @property
     def patient_llm(self) -> _ProviderConfig:
-        return _ProviderConfig(
+        data: dict[str, Any] = dict(
             provider=self.patient_provider,
             model=self.patient_model,
             temperature=self.patient_temperature,
             max_tokens=self.patient_max_tokens,
             seed=self.patient_seed,
         )
+        if self.patient_provider == "azure_foundry":
+            data.update(self._foundry_common)
+        return _ProviderConfig(**data)
 
     @property
     def judge_llm(self) -> _ProviderConfig:
-        return _ProviderConfig(
+        data: dict[str, Any] = dict(
             provider=self.judge_provider,
             model=self.judge_model,
             temperature=self.judge_temperature,
             max_tokens=self.judge_max_tokens,
             seed=None,
         )
+        if self.judge_provider == "azure_foundry":
+            data.update(self._foundry_common)
+        return _ProviderConfig(**data)
 
     @property
     def embedding(self) -> _EmbeddingConfig:
-        return _EmbeddingConfig(
+        data: dict[str, Any] = dict(
             provider=self.embedding_provider,
             model=self.embedding_model,
         )
+        if self.embedding_provider == "azure_foundry":
+            data.update(self._foundry_common)
+        return _EmbeddingConfig(**data)
 
 
 def get_settings() -> Settings:
