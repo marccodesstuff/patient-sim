@@ -21,6 +21,7 @@ dependencies = [
     "pydantic>=2.9",
     "pydantic-settings>=2.6",
     "pyyaml>=6.0",
+    "azure-ai-inference>=1.0",
 ]
 
 [project.optional-dependencies]
@@ -30,6 +31,9 @@ dev = [
     "ruff>=0.5",
     "mypy>=1.10",
     "vcrpy>=6.0",
+]
+azure = [
+    "azure-identity>=1.15",
 ]
 
 [project.scripts]
