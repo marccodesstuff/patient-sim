@@ -19,12 +19,13 @@ def test_foundry_evaluator_noop_when_sdk_missing():
 
 
 def test_foundry_evaluator_handles_runtime_error():
-    fake_mod = type(sys)("azure.ai.evaluation")
-    del fake_mod.evaluate
-    with patch.dict(sys.modules, {"azure.ai.evaluation": fake_mod}):
-        result = FoundryEvaluationAdapter.evaluate(
-            rubric_scores={},
-            patient_turn={"patient_utterance": "I'm okay.", "retrieval_citations": []},
-            student_message="How do you feel?",
-        )
-        assert result.raw is None
+    with patch.dict("sys.modules", {"azure.ai.evaluation": None}):
+        try:
+            result = FoundryEvaluationAdapter.evaluate(
+                rubric_scores={},
+                patient_turn={"patient_utterance": "I'm okay.", "retrieval_citations": []},
+                student_message="How do you feel?",
+            )
+            assert result.raw is None
+        finally:
+            pass
