@@ -5,16 +5,15 @@ import time
 from typing import Any
 
 from langchain_core.language_models import BaseChatModel
-from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.output_parsers import StrOutputParser
+from langchain_core.prompts import ChatPromptTemplate
+from posthog import capture
 
 from patient_sim.config.settings import get_settings
+from patient_sim.graph.parser import parse_patient_turn
 from patient_sim.graph.state import ConversationState
 from patient_sim.models.factory import ModelProvider
 from patient_sim.prompts.patient_system import PATIENT_SYSTEM_V1
-from patient_sim.rag.ingestor import get_retriever
-from patient_sim.schemas import PatientTurn
-from patient_sim.graph.parser import parse_patient_turn
 
 logger = logging.getLogger(__name__)
 
@@ -40,6 +39,15 @@ def retrieve(state: ConversationState, retriever: Any | None = None, *, k: int =
     if retriever is not None:
         docs = retriever.invoke(state.get("student_message") or "")
         state["retrieved_chunks"] = [d.page_content for d in docs]
+        capture(
+            "rag_retrieved",
+            properties={
+                "session_id": state.get("session_id"),
+                "scenario_id": state.get("scenario_id"),
+                "chunk_count": len(state["retrieved_chunks"]),
+                "turn_number": state.get("turn_number"),
+            },
+        )
     return state
 
 
@@ -54,7 +62,9 @@ def respond(state: ConversationState, model: BaseChatModel | None = None) -> Con
         ("user", "PERSONA/CONTEXT:\n{context}\n\nCONVERSATION SUMMARY:\n{summary}\n\nSTUDENT MESSAGE:\n{student}\n\nRespond as the patient in the persona's voice."),
     ])
     chain = prompt | model | StrOutputParser()
+    t0 = time.time()
     raw = chain.invoke(_state_to_prompt_input(state))
+    latency_ms = int((time.time() - t0) * 1000)
 
     citations = state.get("retrieved_chunks", [])[:2]
     parsed = parse_patient_turn(raw, citations)
@@ -62,6 +72,20 @@ def respond(state: ConversationState, model: BaseChatModel | None = None) -> Con
     state["emotional_state"] = parsed.emotional_state
     state["revealed_facts"] = parsed.revealed_facts
     state["flags"] = parsed.flags
+
+    capture(
+        "patient_model_invoked",
+        properties={
+            "session_id": state.get("session_id"),
+            "scenario_id": state.get("scenario_id"),
+            "turn_number": state.get("turn_number"),
+            "latency_ms": latency_ms,
+            "emotional_state": parsed.emotional_state,
+            "is_red_line": state.get("is_red_line", False),
+            "flags": parsed.flags,
+        },
+    )
+
     return state
 
 

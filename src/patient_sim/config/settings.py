@@ -2,7 +2,6 @@ from typing import Any
 
 from pydantic import BaseModel, Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
-import os
 
 
 class _ProviderConfig(BaseModel):
@@ -50,6 +49,9 @@ class Settings(BaseSettings):
     langsmith_tracing: str = Field(default="false", alias="LANGSMITH_TRACING")
     langsmith_project: str = Field(default="patient-sim", alias="LANGSMITH_PROJECT")
     chroma_persist_dir: str = Field(default=".chroma", alias="CHROMA_PERSIST_DIR")
+    posthog_project_token: str = Field(default="", alias="POSTHOG_PROJECT_TOKEN")
+    posthog_host: str = Field(default="https://us.i.posthog.com", alias="POSTHOG_HOST")
+    posthog_disabled: bool = Field(default=False, alias="POSTHOG_DISABLED")
 
     @property
     def _foundry_common(self) -> dict[str, Any]:
