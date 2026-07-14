@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import time
 from contextlib import asynccontextmanager
 from typing import Any
 
@@ -16,9 +17,11 @@ from patient_sim.logging.replay import SessionReplayer
 from patient_sim.logging.structured_logger import TurnLogger, get_logger
 from patient_sim.personas.schemas import load_scenario_from_file
 from patient_sim.retriever_factory import load_persona_from_file as _load_persona_from_file
+from patient_sim.db import Database
 
 settings = get_settings()
 logger = get_logger(__name__)
+db = Database()
 
 
 @asynccontextmanager
@@ -68,7 +71,7 @@ def start_session(req: StartRequest) -> StartResponse:
     scenario = load_scenario_from_file(req.scenario_path)
     persona_path = req.persona_path or f"personas/{scenario.persona_ref}.yaml"
     persona = _load_persona_from_file(persona_path)
-    session_id = f"{scenario.scenario_id}-{len(sessions)+1}"
+    session_id = f"{scenario.scenario_id}-{int(time.time_ns())}"
     state: ConversationState = {
         "session_id": session_id,
         "scenario_id": scenario.scenario_id,
@@ -90,6 +93,7 @@ def start_session(req: StartRequest) -> StartResponse:
         "next": None,
     }
     sessions[session_id] = state
+    db.create_session(session_id, state)
     TurnLogger(session_id).log_turn({"event": "session_start", **state})
 
     with new_context():
@@ -109,7 +113,7 @@ def start_session(req: StartRequest) -> StartResponse:
 
 @app.post("/sessions/{session_id}/turn")
 def session_turn(session_id: str, req: TurnRequest) -> dict[str, Any]:
-    state = sessions.get(session_id)
+    state = db.get_session(session_id) or sessions.get(session_id)
     if state is None:
         with new_context():
             capture(
@@ -125,6 +129,8 @@ def session_turn(session_id: str, req: TurnRequest) -> dict[str, Any]:
         identify_context(session_id)
         result = graph.invoke(state, {"configurable": {"thread_id": session_id}})
         sessions[session_id] = result
+        db.update_session(session_id, result)
+        db.append_turn(session_id, int(result.get("turn_number", 0)), result)
         TurnLogger(session_id).log_turn({"event": "turn", **result})
 
         turn_number = int(result.get("turn_number", 0))
@@ -171,8 +177,7 @@ def session_turn(session_id: str, req: TurnRequest) -> dict[str, Any]:
 
 @app.get("/sessions/{session_id}/replay")
 def replay_session(session_id: str) -> dict[str, Any]:
-    replayer = SessionReplayer(session_id)
-    events = replayer.replay()
+    events = db.replay(session_id)
 
     with new_context():
         identify_context(session_id)

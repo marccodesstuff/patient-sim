@@ -49,6 +49,10 @@ class Settings(BaseSettings):
     langsmith_tracing: str = Field(default="false", alias="LANGSMITH_TRACING")
     langsmith_project: str = Field(default="patient-sim", alias="LANGSMITH_PROJECT")
     chroma_persist_dir: str = Field(default=".chroma", alias="CHROMA_PERSIST_DIR")
+    database_url: str = Field(
+        default="postgresql+psycopg://postgres@localhost:5432/patient_sim",
+        alias="DATABASE_URL",
+    )
     posthog_project_token: str = Field(default="", alias="POSTHOG_PROJECT_TOKEN")
     posthog_host: str = Field(default="https://us.i.posthog.com", alias="POSTHOG_HOST")
     posthog_disabled: bool = Field(default=False, alias="POSTHOG_DISABLED")
