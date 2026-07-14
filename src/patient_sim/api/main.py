@@ -5,6 +5,7 @@ from typing import Any
 
 import posthog
 from fastapi import FastAPI, HTTPException
+from fastapi.middleware.cors import CORSMiddleware
 from posthog import capture, identify_context, new_context
 from pydantic import BaseModel
 
@@ -31,6 +32,14 @@ async def lifespan(app: FastAPI):
 
 
 app = FastAPI(title="Patient Communication Simulator", lifespan=lifespan)
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 
 class StartRequest(BaseModel):
@@ -114,7 +123,7 @@ def session_turn(session_id: str, req: TurnRequest) -> dict[str, Any]:
 
     with new_context():
         identify_context(session_id)
-        result = graph.invoke(state)
+        result = graph.invoke(state, {"configurable": {"thread_id": session_id}})
         sessions[session_id] = result
         TurnLogger(session_id).log_turn({"event": "turn", **result})
 

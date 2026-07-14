@@ -1,0 +1,27 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer components {
+  .card {
+    @apply rounded-xl border border-slate-200 bg-white shadow-sm;
+  }
+}
+
+:root {
+  --background: 250 250 252;
+  --foreground: 15 23 42;
+}
+
+html,
+body {
+  padding: 0;
+  margin: 0;
+  background: rgb(249 250 251);
+  color: rgb(15 23 42);
+  font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+}
+
+* {
+  box-sizing: border-box;
+}

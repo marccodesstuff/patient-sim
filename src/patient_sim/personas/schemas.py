@@ -90,5 +90,13 @@ def load_scenario(path: Path) -> Scenario:
     return Scenario.model_validate(load_yaml(path))
 
 
-def load_rubric(path: Path) -> Rubric:
-    return Rubric.model_validate(load_yaml(path))
+def load_persona_from_file(path: str | Path) -> Persona:
+    return load_persona(Path(path))
+
+
+def load_scenario_from_file(path: str | Path) -> Scenario:
+    return load_scenario(Path(path))
+
+
+def load_rubric_from_file(path: str | Path) -> Rubric:
+    return load_rubric(Path(path))
